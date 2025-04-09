@@ -8,12 +8,12 @@ To run the project locally:
 bash
 Copy
 Edit
-npm install
+**npm install**
 2. Start the development server
 bash
 Copy
 Edit
-npm run dev
+**npm run dev**
 The app will be running at: http://localhost:5173
 
 🌐 Dummy API
