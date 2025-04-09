@@ -5,14 +5,8 @@ This template provides a minimal setup to get React working with Vite, featuring
 To run the project locally:
 
 1. Install dependencies
-bash
-Copy
-Edit
 **npm install**
 2. Start the development server
-bash
-Copy
-Edit
 **npm run dev**
 The app will be running at: http://localhost:5173
 
