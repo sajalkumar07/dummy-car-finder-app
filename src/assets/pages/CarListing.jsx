@@ -11,12 +11,13 @@ const CarListing = ({ cars, loading, wishlist, toggleWishlist }) => {
     fuelType: "",
     transmission: "",
     priceRange: [0, 5000000],
+    sortOrder: "", // Added sortOrder to filters
   });
   const [currentPage, setCurrentPage] = useState(1);
   const carsPerPage = 10;
   const resultsRef = useRef(null);
 
-  // Apply filters
+  // Apply filters and sorting
   useEffect(() => {
     let results = [...cars];
 
@@ -53,6 +54,13 @@ const CarListing = ({ cars, loading, wishlist, toggleWishlist }) => {
       );
     }
 
+    // Apply sorting
+    if (filters.sortOrder === "lowToHigh") {
+      results.sort((a, b) => a.price - b.price);
+    } else if (filters.sortOrder === "highToLow") {
+      results.sort((a, b) => b.price - a.price);
+    }
+
     setFilteredCars(results);
     setCurrentPage(1); // Reset to first page whenever filters change
   }, [cars, filters, searchTerm]);
@@ -83,6 +91,7 @@ const CarListing = ({ cars, loading, wishlist, toggleWishlist }) => {
       fuelType: "",
       transmission: "",
       priceRange: [0, 5000000],
+      sortOrder: "",
     });
     setSearchTerm("");
   };
@@ -93,6 +102,7 @@ const CarListing = ({ cars, loading, wishlist, toggleWishlist }) => {
     filters.transmission,
     filters.priceRange[0] > 0 || filters.priceRange[1] < 5000000,
     searchTerm,
+    filters.sortOrder,
   ].filter(Boolean).length;
 
   // Loading skeleton array
@@ -217,6 +227,14 @@ const CarListing = ({ cars, loading, wishlist, toggleWishlist }) => {
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                       ₹{filters.priceRange[0].toLocaleString()} - ₹
                       {filters.priceRange[1].toLocaleString()}
+                    </span>
+                  )}
+                  {filters.sortOrder && (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      Sort:{" "}
+                      {filters.sortOrder === "lowToHigh"
+                        ? "Low to High"
+                        : "High to Low"}
                     </span>
                   )}
                   {searchTerm && (

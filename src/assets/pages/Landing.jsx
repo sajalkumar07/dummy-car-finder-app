@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
   Heart,
@@ -16,12 +16,34 @@ import Testimonials from "../components/Testimonials";
 const Landing = () => {
   const [scrollPosition, setScrollPosition] = useState(0);
   const [activeFeature, setActiveFeature] = useState(0);
+  const [isVisible, setIsVisible] = useState({});
+
+  const featuredSectionRef = useRef(null);
+  const ctaSectionRef = useRef(null);
+  const featureRefs = useRef([]);
 
   useEffect(() => {
     const handleScroll = () => {
       setScrollPosition(window.scrollY);
+
+      // Check if elements are in viewport
+      const checkVisibility = (element, margin = 0) => {
+        if (!element) return false;
+        const rect = element.getBoundingClientRect();
+        return rect.top + margin <= window.innerHeight && rect.bottom >= 0;
+      };
+
+      // Update visibility state for animated sections
+      setIsVisible((prev) => ({
+        ...prev,
+        featuredSection: checkVisibility(featuredSectionRef.current, 100),
+        ctaSection: checkVisibility(ctaSectionRef.current, 100),
+        features: featureRefs.current.map((ref) => checkVisibility(ref, 100)),
+      }));
     };
+
     window.addEventListener("scroll", handleScroll);
+    handleScroll(); // Initial check
 
     // Auto-rotate features every 3 seconds
     const interval = setInterval(() => {
@@ -32,7 +54,7 @@ const Landing = () => {
       window.removeEventListener("scroll", handleScroll);
       clearInterval(interval);
     };
-  });
+  }, []);
 
   const features = [
     {
@@ -106,6 +128,17 @@ const Landing = () => {
     },
   ];
 
+  // Smooth scroll to section
+  const scrollToSection = (elementId) => {
+    const element = document.getElementById(elementId);
+    if (element) {
+      window.scrollTo({
+        top: element.offsetTop,
+        behavior: "smooth",
+      });
+    }
+  };
+
   return (
     <div className="bg-white overflow-hidden">
       {/* Hero Section with parallax effect */}
@@ -121,23 +154,22 @@ const Landing = () => {
         ></div>
         <div className="container mx-auto px-4 z-10">
           <div className="max-w-3xl mx-auto text-center">
-            <div className="inline-flex items-center mb-4 px-3 py-1 rounded-full bg-blue-600 bg-opacity-30 text-blue-200 text-sm">
+            <div className="inline-flex items-center mb-4 px-3 py-1 rounded-full bg-blue-600 bg-opacity-30 text-blue-200 text-sm animate-fadeIn">
               <Sparkles size={16} className="mr-2" />
               New models just arrived
             </div>
 
-            <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 tracking-tight">
+            <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 tracking-tight animate-fadeIn">
               Find your <span className="text-blue-400">perfect</span> ride
             </h1>
 
-            <p className="text-xl text-gray-300 mb-8 leading-relaxed">
+            <p className="text-xl text-gray-300 mb-8 leading-relaxed animate-fadeIn">
               Explore our premium collection and experience a new standard in
               automotive excellence
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <div className=" ">
-                {" "}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fadeIn">
+              <div>
                 <Link
                   to="/cars"
                   className="group inline-flex items-center px-8 py-4 bg-blue-800 hover:bg-blue-600 text-white font-medium rounded-xl transition-all"
@@ -150,25 +182,27 @@ const Landing = () => {
                 </Link>
               </div>
               <div>
-                {" "}
-                <Link
-                  to="/"
+                <button
+                  onClick={() => scrollToSection("features")}
                   className="p-4 bg-white/10 hover:bg-white/20 backdrop-blur text-white font-medium rounded-lg transition-colors border border-white/20"
                 >
                   Learn More
-                </Link>
+                </button>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="absolute bottom-10 left-0 right-0 flex justify-center animate-bounce">
+        <div
+          className="absolute bottom-10 left-0 right-0 flex justify-center animate-bounce cursor-pointer"
+          onClick={() => scrollToSection("features")}
+        >
           <ChevronDown size={24} className="text-white/70" />
         </div>
       </section>
 
       {/* Features Section with interaction */}
-      <section className="py-24 bg-gray-50">
+      <section id="features" className="py-24 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="max-w-2xl mx-auto text-center mb-16">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
@@ -184,11 +218,17 @@ const Landing = () => {
             {features.map((feature, index) => (
               <div
                 key={index}
+                ref={(el) => (featureRefs.current[index] = el)}
                 className={`bg-white p-8 rounded-xl shadow-sm border-2 transition-all duration-300 cursor-pointer hover:shadow-md ${
                   activeFeature === index
                     ? "border-blue-500 shadow-md"
                     : "border-transparent"
+                } ${
+                  isVisible.features && isVisible.features[index]
+                    ? "opacity-100"
+                    : "opacity-0"
                 }`}
+                style={{ transition: "opacity 0.5s ease" }}
                 onClick={() => setActiveFeature(index)}
               >
                 <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mb-6">
@@ -205,8 +245,11 @@ const Landing = () => {
       </section>
 
       {/* Featured Vehicles */}
-
-      <section className="py-24 bg-white">
+      <section
+        ref={featuredSectionRef}
+        className="py-24 bg-white"
+        id="featured-vehicles"
+      >
         <div className="container mx-auto px-4">
           <div className="max-w-2xl mx-auto text-center mb-16">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
@@ -218,16 +261,21 @@ const Landing = () => {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {featuredVehicles.map((vehicle) => (
+            {featuredVehicles.map((vehicle, index) => (
               <div
                 key={vehicle.id}
-                className="group bg-white rounded-xl border border-gray-200 overflow-hidden transition-all"
+                className={`group bg-white rounded-xl border border-gray-200 overflow-hidden transition-all duration-500 
+                ${isVisible.featuredSection ? "opacity-100" : "opacity-0"}`}
+                style={{
+                  transition: "opacity 0.5s ease",
+                  transitionDelay: `${index * 0.1}s`,
+                }}
               >
-                <div className="relative">
+                <div className="relative overflow-hidden">
                   <img
                     src={vehicle.imageURL}
                     alt={vehicle.carName}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                 </div>
                 <div className="p-6">
@@ -235,7 +283,7 @@ const Landing = () => {
                     <h3 className="text-xl font-semibold text-gray-900">
                       {vehicle.brand} {vehicle.model}
                     </h3>
-                    <span className="text-gray-500 ">{vehicle.year}</span>
+                    <span className="text-gray-500">{vehicle.year}</span>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2 mb-4 text-sm text-gray-600">
@@ -341,11 +389,20 @@ const Landing = () => {
       </section>
 
       {/* Testimonials with carousel indicator */}
-      <Testimonials></Testimonials>
+      <Testimonials />
+
       {/* CTA Section with gradient background */}
-      <section className="py-24 bg-gradient-to-r from-blue-600 to-blue-800 text-white">
+      <section
+        ref={ctaSectionRef}
+        className="py-24 bg-gradient-to-r from-blue-600 to-blue-800 text-white"
+        id="cta"
+      >
         <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center">
+          <div
+            className={`max-w-3xl mx-auto text-center transition-opacity duration-500 ${
+              isVisible.ctaSection ? "opacity-100" : "opacity-0"
+            }`}
+          >
             <h2 className="text-4xl font-bold mb-6">
               Ready to find your dream car?
             </h2>
@@ -365,22 +422,17 @@ const Landing = () => {
             </Link>
 
             <div className="mt-12 pt-12 border-t border-white/20 grid grid-cols-2 md:grid-cols-4 gap-8">
-              <div className="text-center">
-                <p className="text-3xl font-bold">25k+</p>
-                <p className="text-sm opacity-80">Happy Customers</p>
-              </div>
-              <div className="text-center">
-                <p className="text-3xl font-bold">1,500+</p>
-                <p className="text-sm opacity-80">Vehicles Available</p>
-              </div>
-              <div className="text-center">
-                <p className="text-3xl font-bold">4.9</p>
-                <p className="text-sm opacity-80">Customer Rating</p>
-              </div>
-              <div className="text-center">
-                <p className="text-3xl font-bold">24/7</p>
-                <p className="text-sm opacity-80">Support</p>
-              </div>
+              {[
+                { value: "25k+", label: "Happy Customers" },
+                { value: "1,500+", label: "Vehicles Available" },
+                { value: "4.9", label: "Customer Rating" },
+                { value: "24/7", label: "Support" },
+              ].map((stat, index) => (
+                <div key={index} className="text-center">
+                  <p className="text-3xl font-bold">{stat.value}</p>
+                  <p className="text-sm opacity-80">{stat.label}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>

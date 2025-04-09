@@ -9,6 +9,7 @@ const FilterSection = ({ cars, onFilter }) => {
     fuelType: "",
     transmission: "",
     priceRange: [0, 5000000],
+    sortOrder: "",
   });
 
   // Get unique filter values
@@ -38,12 +39,19 @@ const FilterSection = ({ cars, onFilter }) => {
     onFilter(newFilters);
   };
 
+  const handleSortChange = (value) => {
+    const newFilters = { ...filters, sortOrder: value };
+    setFilters(newFilters);
+    onFilter(newFilters);
+  };
+
   const resetFilters = () => {
     const defaultFilters = {
       brand: "",
       fuelType: "",
       transmission: "",
       priceRange: [0, 5000000],
+      sortOrder: "",
     };
     setFilters(defaultFilters);
     onFilter(defaultFilters);
@@ -62,6 +70,35 @@ const FilterSection = ({ cars, onFilter }) => {
       </div>
 
       <div className="space-y-6">
+        {/* Sort Order Filter */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Sort by Price
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => handleSortChange("lowToHigh")}
+              className={`py-2 px-3 rounded-lg text-sm border transition-colors ${
+                filters.sortOrder === "lowToHigh"
+                  ? "bg-blue-50 border-blue-200 text-blue-700"
+                  : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
+              }`}
+            >
+              Low to High
+            </button>
+            <button
+              onClick={() => handleSortChange("highToLow")}
+              className={`py-2 px-3 rounded-lg text-sm border transition-colors ${
+                filters.sortOrder === "highToLow"
+                  ? "bg-blue-50 border-blue-200 text-blue-700"
+                  : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
+              }`}
+            >
+              High to Low
+            </button>
+          </div>
+        </div>
+
         {/* Brand Filter */}
         <div className="relative w-full">
           <FormControl fullWidth size="small">
